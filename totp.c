@@ -42,6 +42,7 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 
 static const int8_t base32_vals[256] =
