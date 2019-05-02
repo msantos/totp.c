@@ -39,8 +39,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
-#include <openssl/evp.h>
-#include <openssl/hmac.h>
+#include <hmac/hmac.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -85,7 +84,8 @@ int main(int argc, char * argv[])
    uint64_t   x;       // step in seconds
    uint64_t   t;       // number of steps
    uint64_t   offset;
-   uint8_t  * hmac_result;
+   uint8_t    hmac_result[20] = {0};
+   size_t     hmac_result_len;
    uint32_t   bin_code;
    uint32_t   totp;
    uint8_t  * k;       // user's secret key
@@ -230,8 +230,8 @@ int main(int argc, char * argv[])
 
 
    // determines hash
-   hmac_result = (uint8_t *)HMAC(EVP_sha1(), k, keylen, (const unsigned char *)&t, sizeof(t), NULL, 0);
-
+   hmac_result_len = sizeof(hmac_result);
+   hmac_sha1(k, keylen, (const unsigned char *)&t, sizeof(t), hmac_result, &hmac_result_len);
 
    // dynamically truncates hash
    offset   = hmac_result[19] & 0x0f;

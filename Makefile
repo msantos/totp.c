@@ -8,8 +8,8 @@ all:
 		-pie -fPIE \
     -Wshadow -Wpointer-arith -Wcast-qual \
     -Wstrict-prototypes -Wmissing-prototypes \
-    -o totp totp.c \
-		-lcrypto \
+    -I. \
+    -o totp hmac/hmac_sha1.c sha/sha1.c totp.c \
     -Wl,-z,relro,-z,now -Wl,-z,noexecstack
 
 clean:
