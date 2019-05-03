@@ -244,7 +244,7 @@ int main(int argc, char * argv[])
    totp = bin_code % 1000000;
 
 
-   printf("totp: %06u\n", totp);
+   printf("%06u\n", totp);
 
    return(0);
 }
