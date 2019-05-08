@@ -1,7 +1,9 @@
 .PHONY: all clean test
 
+SANDBOX?=null
+
 all:
-	$(CC) \
+	$(CC) -DSANDBOX_$(SANDBOX) \
     -Wall -Wextra -pedantic \
 		-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
 		-Wformat -Werror=format-security \

@@ -36,6 +36,7 @@
  *  Compile with:  gcc -Wall -o totp totp.c -lcrypto
  */
 
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +44,10 @@
 #include <time.h>
 
 #include <hmac/hmac.h>
+
+#ifdef SANDBOX_null
+#define SANDBOX "null"
+#endif
 
 static const int8_t base32_vals[256] = {
     //    This map cheats and interprets:
@@ -69,6 +74,7 @@ static const int8_t base32_vals[256] = {
 };
 // static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
 
+int sandbox(void);
 int main(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
@@ -89,6 +95,11 @@ int main(int argc, char *argv[]) {
   x = 30;
   t0 = 0;
 
+  if (sandbox() < 0) {
+    fprintf(stderr, "error: sandbox: %s\n", strerror(errno));
+    return (111);
+  }
+
   switch (argc) {
   case 4:
     t0 = strtoll(argv[3], NULL, 0);
@@ -101,8 +112,10 @@ int main(int argc, char *argv[]) {
     break;
 
   default:
-    fprintf(stderr, "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n",
-            argv[0]);
+    fprintf(
+        stderr,
+        "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s sandbox)\n",
+        argv[0], SANDBOX);
     return (1);
     break;
   };
@@ -225,3 +238,7 @@ int main(int argc, char *argv[]) {
 
   return (0);
 }
+
+#ifdef SANDBOX_null
+int sandbox() { return 0; }
+#endif
