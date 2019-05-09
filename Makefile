@@ -1,6 +1,6 @@
 .PHONY: all clean test
 
-SANDBOX?=null
+SANDBOX?=rlimit
 
 all:
 	$(CC) -DSANDBOX_$(SANDBOX) \

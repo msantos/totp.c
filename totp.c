@@ -45,7 +45,11 @@
 
 #include <hmac/hmac.h>
 
-#ifdef SANDBOX_null
+#if defined(SANDBOX_rlimit)
+#include <sys/resource.h>
+#include <sys/time.h>
+#define SANDBOX "rlimit"
+#elif defined(SANDBOX_null)
 #define SANDBOX "null"
 #endif
 
@@ -239,6 +243,18 @@ int main(int argc, char *argv[]) {
   return (0);
 }
 
-#ifdef SANDBOX_null
+#if defined(SANDBOX_rlimit)
+int sandbox() {
+  struct rlimit rl_zero = {0};
+
+  if (setrlimit(RLIMIT_NPROC, &rl_zero) < 0)
+    return -1;
+
+  if (setrlimit(RLIMIT_NOFILE, &rl_zero) < 0)
+    return -1;
+
+  return setrlimit(RLIMIT_FSIZE, &rl_zero);
+}
+#elif defined(SANDBOX_null)
 int sandbox() { return 0; }
 #endif
