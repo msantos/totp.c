@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <hmac/hmac.h>
 
@@ -49,8 +50,16 @@
 #include <sys/resource.h>
 #include <sys/time.h>
 #define SANDBOX "rlimit"
+#define SYS_EXIT(_status) return (_status)
+#elif defined(SANDBOX_seccomp)
+#include <linux/seccomp.h>
+#include <sys/prctl.h>
+#include <syscall.h>
+#define SANDBOX "seccomp"
+#define SYS_EXIT(_status) syscall(__NR_exit, _status)
 #elif defined(SANDBOX_null)
 #define SANDBOX "null"
+#define SYS_EXIT(_status) return (_status)
 #endif
 
 static const int8_t base32_vals[256] = {
@@ -87,6 +96,7 @@ int main(int argc, char *argv[]) {
   size_t keylen;
   uint32_t endianness;
   time_t t0;  // Unix time to start counting time step
+  time_t now; // Unix time
   uint64_t x; // step in seconds
   uint64_t t; // number of steps
   uint64_t offset;
@@ -95,13 +105,15 @@ int main(int argc, char *argv[]) {
   uint32_t bin_code;
   uint32_t totp;
   uint8_t *k; // user's secret key
+  char buf[8] = {0};
 
   x = 30;
   t0 = 0;
+  now = time(NULL);
 
   if (sandbox() < 0) {
     fprintf(stderr, "error: sandbox: %s\n", strerror(errno));
-    return (111);
+    SYS_EXIT(111);
   }
 
   switch (argc) {
@@ -120,7 +132,7 @@ int main(int argc, char *argv[]) {
         stderr,
         "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s sandbox)\n",
         argv[0], SANDBOX);
-    return (1);
+    SYS_EXIT(1);
     break;
   };
 
@@ -129,21 +141,21 @@ int main(int argc, char *argv[]) {
   // validates base32 key
   if (((len & 0xF) != 0) && ((len & 0xF) != 8)) {
     fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-    return (1);
+    SYS_EXIT(1);
   };
   for (pos = 0; (pos < len); pos++) {
     if (base32_vals[k[pos]] == -1) {
       fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-      return (1);
+      SYS_EXIT(1);
     };
     if (k[pos] == '=') {
       if (((pos & 0xF) == 0) || ((pos & 0xF) == 8)) {
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        return (1);
+        SYS_EXIT(1);
       }
       if ((len - pos) > 6) {
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        return (1);
+        SYS_EXIT(1);
       };
       switch (pos % 8) {
       case 2:
@@ -154,12 +166,12 @@ int main(int argc, char *argv[]) {
 
       default:
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        return (1);
+        SYS_EXIT(1);
       };
       for (; (pos < len); pos++) {
         if (k[pos] != '=') {
           fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-          return (1);
+          SYS_EXIT(1);
         };
       };
     };
@@ -213,7 +225,7 @@ int main(int argc, char *argv[]) {
   };
   k[keylen] = 0;
 
-  t = (time(NULL) - t0) / x;
+  t = (now - t0) / x;
 
   // converts T to big endian if system is little endian
   endianness = 0xdeadbeef;
@@ -238,9 +250,11 @@ int main(int argc, char *argv[]) {
   // truncates code to 6 digits
   totp = bin_code % 1000000;
 
-  printf("%06u\n", totp);
+  snprintf(buf, sizeof(buf), "%06u\n", totp);
+  if (write(STDOUT_FILENO, buf, sizeof(buf) - 1) < 0)
+    SYS_EXIT(128 + errno);
 
-  return (0);
+  SYS_EXIT(0);
 }
 
 #if defined(SANDBOX_rlimit)
@@ -255,6 +269,8 @@ int sandbox() {
 
   return setrlimit(RLIMIT_FSIZE, &rl_zero);
 }
+#elif defined(SANDBOX_seccomp)
+int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
 #elif defined(SANDBOX_null)
 int sandbox() { return 0; }
 #endif
