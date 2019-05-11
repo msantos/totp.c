@@ -56,7 +56,8 @@
 #include <sys/prctl.h>
 #include <syscall.h>
 #define SANDBOX "seccomp"
-#define SYS_EXIT(_status) syscall(__NR_exit, _status)
+#define SYS_EXIT_IS_FUN
+#define SYS_EXIT(_status) sys_exit(_status)
 #elif defined(SANDBOX_null)
 #define SANDBOX "null"
 #define SYS_EXIT(_status) return (_status)
@@ -87,6 +88,9 @@ static const int8_t base32_vals[256] = {
 };
 // static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
 
+#ifdef SYS_EXIT_IS_FUN
+void sys_exit(int status) __attribute__((noreturn));
+#endif
 int sandbox(void);
 int main(int argc, char *argv[]);
 
@@ -273,4 +277,8 @@ int sandbox() {
 int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
 #elif defined(SANDBOX_null)
 int sandbox() { return 0; }
+#endif
+
+#ifdef SYS_EXIT_IS_FUN
+void sys_exit(int status) { syscall(__NR_exit, status); }
 #endif
