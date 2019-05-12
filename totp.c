@@ -280,5 +280,8 @@ int sandbox() { return 0; }
 #endif
 
 #ifdef SYS_EXIT_IS_FUN
-void sys_exit(int status) { syscall(__NR_exit, status); }
+void sys_exit(int status) {
+  for (;;)
+    syscall(__NR_exit, status);
+}
 #endif
