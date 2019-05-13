@@ -110,6 +110,8 @@ int main(int argc, char *argv[]) {
   uint32_t totp;
   uint8_t *k; // user's secret key
   char buf[8] = {0};
+  uint8_t keybuf[32] = {0};
+  char *p;
 
   x = 30;
   t0 = 0;
@@ -129,6 +131,15 @@ int main(int argc, char *argv[]) {
 
   case 2:
     k = (uint8_t *)argv[1];
+    if (k && k[0] == '-') {
+      if (read(STDIN_FILENO, keybuf, sizeof(keybuf) - 1) <= 0) {
+        SYS_EXIT(128 + errno);
+      }
+      p = strchr((char *)keybuf, '\n');
+      if (p != NULL)
+        *p = '\0';
+      k = keybuf;
+    }
     break;
 
   default:
@@ -140,7 +151,7 @@ int main(int argc, char *argv[]) {
     break;
   };
 
-  len = strlen(argv[1]);
+  len = strlen((char *)k);
 
   // validates base32 key
   if (((len & 0xF) != 0) && ((len & 0xF) != 8)) {
