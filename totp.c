@@ -53,6 +53,7 @@
 #define SYS_EXIT(_status) return (_status)
 #elif defined(SANDBOX_seccomp)
 #include <linux/seccomp.h>
+#include <stdnoreturn.h>
 #include <sys/prctl.h>
 #include <syscall.h>
 #define SANDBOX "seccomp"
@@ -89,9 +90,9 @@ static const int8_t base32_vals[256] = {
 // static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
 
 #ifdef SYS_EXIT_IS_FUN
-void sys_exit(int status) __attribute__((noreturn));
+static noreturn void sys_exit(int status);
 #endif
-int sandbox(void);
+static int sandbox(void);
 int main(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
@@ -273,7 +274,7 @@ int main(int argc, char *argv[]) {
 }
 
 #if defined(SANDBOX_rlimit)
-int sandbox() {
+static int sandbox() {
   struct rlimit rl_zero = {0};
 
   if (setrlimit(RLIMIT_NPROC, &rl_zero) < 0)
@@ -285,13 +286,13 @@ int sandbox() {
   return setrlimit(RLIMIT_FSIZE, &rl_zero);
 }
 #elif defined(SANDBOX_seccomp)
-int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
+static int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
 #elif defined(SANDBOX_null)
-int sandbox() { return 0; }
+static int sandbox() { return 0; }
 #endif
 
 #ifdef SYS_EXIT_IS_FUN
-void sys_exit(int status) {
+static noreturn void sys_exit(int status) {
   for (;;)
     syscall(__NR_exit, status);
 }
