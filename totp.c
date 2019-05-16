@@ -132,7 +132,9 @@ int main(int argc, char *argv[]) {
 
   case 2:
     k = (uint8_t *)argv[1];
-    if (k && k[0] == '-') {
+    if (k == NULL)
+      SYS_EXIT(111);
+    if (k[0] == '-') {
       if (read(STDIN_FILENO, keybuf, sizeof(keybuf) - 1) <= 0) {
         SYS_EXIT(128 + errno);
       }
