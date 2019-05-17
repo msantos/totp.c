@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
   size_t len;
   size_t keylen;
   uint32_t endianness;
-  time_t t0;  // Unix time to start counting time step
+  time_t t0;  // Unix time offset to start counting time step
   time_t now; // Unix time
   uint64_t x; // step in seconds
   uint64_t t; // number of steps
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
   };
   k[keylen] = 0;
 
-  t = (now - t0) / x;
+  t = (now + t0) / x;
 
   // converts T to big endian if system is little endian
   endianness = 0xdeadbeef;
