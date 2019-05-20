@@ -16,3 +16,6 @@ all:
 
 clean:
 	-@rm totp
+
+test:
+	@PATH=.:$(PATH) bats test
