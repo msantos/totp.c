@@ -59,6 +59,13 @@
 #define SANDBOX "seccomp"
 #define SYS_EXIT_IS_FUN
 #define SYS_EXIT(_status) sys_exit(_status)
+#elif defined(SANDBOX_capsicum)
+#include <sys/capsicum.h>
+#include <sys/param.h>
+#include <sys/resource.h>
+#include <sys/types.h>
+#define SANDBOX "capsicum"
+#define SYS_EXIT(_status) return (_status)
 #elif defined(SANDBOX_null)
 #define SANDBOX "null"
 #define SYS_EXIT(_status) return (_status)
@@ -294,6 +301,29 @@ static int sandbox() {
 }
 #elif defined(SANDBOX_seccomp)
 static int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
+#elif defined(SANDBOX_capsicum)
+static int sandbox() {
+  struct rlimit rl = {0};
+  cap_rights_t policy_read;
+  cap_rights_t policy_write;
+
+  if (setrlimit(RLIMIT_NPROC, &rl) < 0)
+    return -1;
+
+  (void)cap_rights_init(&policy_read, CAP_READ, CAP_EVENT, CAP_FCNTL);
+  (void)cap_rights_init(&policy_write, CAP_WRITE, CAP_READ);
+
+  if (cap_rights_limit(STDIN_FILENO, &policy_read) < 0)
+    return -1;
+
+  if (cap_rights_limit(STDOUT_FILENO, &policy_write) < 0)
+    return -1;
+
+  if (cap_rights_limit(STDERR_FILENO, &policy_write) < 0)
+    return -1;
+
+  return cap_enter();
+}
 #elif defined(SANDBOX_null)
 static int sandbox() { return 0; }
 #endif
