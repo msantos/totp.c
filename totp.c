@@ -66,6 +66,9 @@
 #include <sys/types.h>
 #define SANDBOX "capsicum"
 #define SYS_EXIT(_status) return (_status)
+#elif defined(SANDBOX_pledge)
+#define SANDBOX "pledge"
+#define SYS_EXIT(_status) return (_status)
 #elif defined(SANDBOX_null)
 #define SANDBOX "null"
 #define SYS_EXIT(_status) return (_status)
@@ -323,6 +326,13 @@ static int sandbox() {
     return -1;
 
   return cap_enter();
+}
+#elif defined(SANDBOX_pledge)
+static int sandbox() {
+  if (unveil(NULL, NULL) < 0)
+    return -1;
+
+  return pledge("stdio", NULL);
 }
 #elif defined(SANDBOX_null)
 static int sandbox() { return 0; }
