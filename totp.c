@@ -329,7 +329,7 @@ static int sandbox() {
 }
 #elif defined(SANDBOX_pledge)
 static int sandbox() {
-  if (unveil(NULL, NULL) < 0)
+  if (unveil("/", "") < 0)
     return -1;
 
   return pledge("stdio", NULL);
