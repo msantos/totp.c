@@ -1,5 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
+ *  Copyright (c) 2019, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
@@ -57,7 +58,7 @@
 #include <sys/prctl.h>
 #include <syscall.h>
 #define SANDBOX "seccomp"
-#define SYS_EXIT_IS_FUN
+static noreturn void sys_exit(int status);
 #define SYS_EXIT(_status) sys_exit(_status)
 #elif defined(SANDBOX_capsicum)
 #include <sys/capsicum.h>
@@ -103,9 +104,6 @@ static const int8_t base32_vals[256] = {
 };
 /* static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567="; */
 
-#ifdef SYS_EXIT_IS_FUN
-static noreturn void sys_exit(int status);
-#endif
 static int sandbox(void);
 int main(int argc, char *argv[]);
 
@@ -304,6 +302,11 @@ static int sandbox() {
 }
 #elif defined(SANDBOX_seccomp)
 static int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
+
+static noreturn void sys_exit(int status) {
+  for (;;)
+    syscall(__NR_exit, status);
+}
 #elif defined(SANDBOX_capsicum)
 static int sandbox() {
   struct rlimit rl = {0};
@@ -336,11 +339,4 @@ static int sandbox() {
 }
 #elif defined(SANDBOX_null)
 static int sandbox() { return 0; }
-#endif
-
-#ifdef SYS_EXIT_IS_FUN
-static noreturn void sys_exit(int status) {
-  for (;;)
-    syscall(__NR_exit, status);
-}
 #endif
