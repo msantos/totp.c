@@ -332,9 +332,6 @@ static int sandbox() {
 }
 #elif defined(SANDBOX_pledge)
 static int sandbox() {
-  if (unveil("/", "") < 0)
-    return -1;
-
   return pledge("stdio", NULL);
 }
 #elif defined(SANDBOX_null)
