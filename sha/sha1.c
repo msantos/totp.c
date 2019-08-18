@@ -95,22 +95,16 @@ void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]);
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
-#if defined (BYTE_ORDER) && defined(BIG_ENDIAN) && (BYTE_ORDER == BIG_ENDIAN)
-#define WORDS_BIGENDIAN 1
-#endif
-#ifdef _BIG_ENDIAN
-#define WORDS_BIGENDIAN 1
-#endif
-
 
 /* blk0() and blk() perform the initial expand. */
 /* I got the idea of expanding during the round function from SSLeay */
-/* FIXME: can we do this in an endian-proof way? */
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
+            |(rol(block->l[i],8)&0x00FF00FF))
+#elif BYTE_ORDER == BIG_ENDIAN
 #define blk0(i) block->l[i]
 #else
-#define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xff00ff00) \
-         |(rol(block->l[i],8)&0x00ff00ff))
+#error "Endianness not defined!"
 #endif
 #define blk(i) (block->l[i&15] = rol(block->l[(i+13)&15]^block->l[(i+8)&15] \
                      ^block->l[(i+2)&15]^block->l[i&15],1))
