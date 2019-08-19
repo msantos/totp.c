@@ -12,8 +12,10 @@ KEYFILE='YW2N4W7UBAIAEVCT
 50135452
 '
 
+export TOTP_SECONDS=1558265803
+
 @test "totp: generate token" {
-    run faketime '2019-05-19 07:36:43' totp "$KEY"
+    run totp "$KEY"
     cat << EOF
 --- output
 $output
@@ -24,7 +26,7 @@ EOF
 }
 
 @test "totp: token from previous offset" {
-    run faketime '2019-05-19 07:36:43' totp "$KEY" 30 -30
+    run totp "$KEY" 30 -30
     cat << EOF
 --- output
 $output
@@ -35,7 +37,7 @@ EOF
 }
 
 @test "totp: token from next offset" {
-    run faketime '2019-05-19 07:36:43' totp "$KEY" 30 30
+    run totp "$KEY" 30 30
     cat << EOF
 --- output
 $output
@@ -46,7 +48,7 @@ EOF
 }
 
 @test "totp: read key from stdin" {
-    run sh -c "echo $KEY | faketime '2019-05-19 07:36:43' totp - 30 -90"
+    run sh -c "echo $KEY | totp - 30 -90"
     cat << EOF
 --- output
 $output

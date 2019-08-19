@@ -105,7 +105,6 @@ static const int8_t base32_vals[256] = {
 /* static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567="; */
 
 static int sandbox(void);
-int main(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
   size_t pos;
@@ -113,6 +112,7 @@ int main(int argc, char *argv[]) {
   size_t keylen;
   uint32_t endianness;
   time_t t0;  /* Unix time offset to start counting time step */
+  char *env_now;
   time_t now; /* Unix time */
   uint64_t x; /* step in seconds */
   uint64_t t; /* number of steps */
@@ -128,7 +128,9 @@ int main(int argc, char *argv[]) {
 
   x = 30;
   t0 = 0;
-  now = time(NULL);
+
+  env_now = getenv("TOTP_SECONDS");
+  now = env_now == NULL ? time(NULL) : strtoll(env_now, NULL, 0);
 
   if (sandbox() < 0) {
     fprintf(stderr, "error: sandbox: %s\n", strerror(errno));
