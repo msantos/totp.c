@@ -47,31 +47,31 @@
 
 #include <hmac/hmac.h>
 
-#if defined(SANDBOX_rlimit)
+#if defined(RESTRICT_PROCESS_rlimit)
 #include <sys/resource.h>
 #include <sys/time.h>
-#define SANDBOX "rlimit"
+#define RESTRICT_PROCESS "rlimit"
 #define SYS_EXIT(_status) return (_status)
-#elif defined(SANDBOX_seccomp)
+#elif defined(RESTRICT_PROCESS_seccomp)
 #include <linux/seccomp.h>
 #include <stdnoreturn.h>
 #include <sys/prctl.h>
 #include <syscall.h>
-#define SANDBOX "seccomp"
+#define RESTRICT_PROCESS "seccomp"
 static noreturn void sys_exit(int status);
 #define SYS_EXIT(_status) sys_exit(_status)
-#elif defined(SANDBOX_capsicum)
+#elif defined(RESTRICT_PROCESS_capsicum)
 #include <sys/capsicum.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 #include <sys/types.h>
-#define SANDBOX "capsicum"
+#define RESTRICT_PROCESS "capsicum"
 #define SYS_EXIT(_status) return (_status)
-#elif defined(SANDBOX_pledge)
-#define SANDBOX "pledge"
+#elif defined(RESTRICT_PROCESS_pledge)
+#define RESTRICT_PROCESS "pledge"
 #define SYS_EXIT(_status) return (_status)
-#elif defined(SANDBOX_null)
-#define SANDBOX "null"
+#elif defined(RESTRICT_PROCESS_null)
+#define RESTRICT_PROCESS "null"
 #define SYS_EXIT(_status) return (_status)
 #endif
 
@@ -104,14 +104,14 @@ static const int8_t base32_vals[256] = {
 };
 /* static const char * base32_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567="; */
 
-static int sandbox(void);
+static int restrict_process(void);
 
 int main(int argc, char *argv[]) {
   size_t pos;
   size_t len;
   size_t keylen;
   uint32_t endianness;
-  time_t t0;  /* Unix time offset to start counting time step */
+  time_t t0; /* Unix time offset to start counting time step */
   char *env_now;
   time_t now; /* Unix time */
   uint64_t x; /* step in seconds */
@@ -132,8 +132,8 @@ int main(int argc, char *argv[]) {
   env_now = getenv("TOTP_SECONDS");
   now = env_now == NULL ? time(NULL) : strtoll(env_now, NULL, 0);
 
-  if (sandbox() < 0) {
-    fprintf(stderr, "error: sandbox: %s\n", strerror(errno));
+  if (restrict_process() < 0) {
+    fprintf(stderr, "error: restrict_process: %s\n", strerror(errno));
     SYS_EXIT(111);
   }
 
@@ -160,10 +160,10 @@ int main(int argc, char *argv[]) {
     break;
 
   default:
-    fprintf(
-        stderr,
-        "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s sandbox)\n",
-        argv[0], SANDBOX);
+    fprintf(stderr,
+            "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s "
+            "restrict_process)\n",
+            argv[0], RESTRICT_PROCESS);
     SYS_EXIT(1);
     break;
   };
@@ -290,8 +290,8 @@ int main(int argc, char *argv[]) {
   SYS_EXIT(0);
 }
 
-#if defined(SANDBOX_rlimit)
-static int sandbox() {
+#if defined(RESTRICT_PROCESS_rlimit)
+static int restrict_process() {
   struct rlimit rl_zero = {0};
 
   if (setrlimit(RLIMIT_NPROC, &rl_zero) < 0)
@@ -302,15 +302,17 @@ static int sandbox() {
 
   return setrlimit(RLIMIT_FSIZE, &rl_zero);
 }
-#elif defined(SANDBOX_seccomp)
-static int sandbox() { return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT); }
+#elif defined(RESTRICT_PROCESS_seccomp)
+static int restrict_process() {
+  return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
+}
 
 static noreturn void sys_exit(int status) {
   for (;;)
     syscall(__NR_exit, status);
 }
-#elif defined(SANDBOX_capsicum)
-static int sandbox() {
+#elif defined(RESTRICT_PROCESS_capsicum)
+static int restrict_process() {
   struct rlimit rl = {0};
   cap_rights_t policy_read;
   cap_rights_t policy_write;
@@ -332,10 +334,8 @@ static int sandbox() {
 
   return cap_enter();
 }
-#elif defined(SANDBOX_pledge)
-static int sandbox() {
-  return pledge("stdio", NULL);
-}
-#elif defined(SANDBOX_null)
-static int sandbox() { return 0; }
+#elif defined(RESTRICT_PROCESS_pledge)
+static int restrict_process() { return pledge("stdio", NULL); }
+#elif defined(RESTRICT_PROCESS_null)
+static int restrict_process() { return 0; }
 #endif

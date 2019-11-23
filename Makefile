@@ -1,9 +1,9 @@
 .PHONY: all clean test
 
-SANDBOX?=rlimit
+RESTRICT_PROCESS?=rlimit
 
 all:
-	$(CC) -DSANDBOX_$(SANDBOX) \
+	$(CC) -DRESTRICT_PROCESS_$(RESTRICT_PROCESS) \
     -Wall -Wextra -pedantic \
 		-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
 		-Wformat -Werror=format-security \
