@@ -140,10 +140,10 @@ int main(int argc, char *argv[]) {
   switch (argc) {
   case 4:
     t0 = strtoll(argv[3], NULL, 0);
-
+    /* fallthrough */
   case 3:
     x = strtoll(argv[2], NULL, 0);
-
+    /* fallthrough */
   case 2:
     k = (uint8_t *)argv[1];
     if (k == NULL)
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
   default:
     fprintf(stderr,
             "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s "
-            "restrict_process)\n",
+            "process restriction)\n",
             argv[0], RESTRICT_PROCESS);
     SYS_EXIT(1);
     break;
