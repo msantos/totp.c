@@ -1,21 +1,41 @@
 .PHONY: all clean test
 
-RESTRICT_PROCESS?=rlimit
+PROG=   totp
+SRCS=   totp.c \
+        hmac/hmac_sha1.c \
+				sha/sha1.c
 
-all:
-	$(CC) -DRESTRICT_PROCESS_$(RESTRICT_PROCESS) \
-    -Wall -Wextra -pedantic \
-		-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
-		-Wformat -Werror=format-security \
-		-pie -fPIE \
-    -Wshadow -Wpointer-arith -Wcast-qual \
-    -Wstrict-prototypes -Wmissing-prototypes \
-    -I. \
-    -o totp hmac/hmac_sha1.c sha/sha1.c totp.c \
-    -Wl,-z,relro,-z,now -Wl,-z,noexecstack
+UNAME_SYS := $(shell uname -s)
+ifeq ($(UNAME_SYS), Linux)
+    RESTRICT_PROCESS ?= seccomp
+else ifeq ($(UNAME_SYS), OpenBSD)
+    CFLAGS ?= -DHAVE_STRTONUM
+    RESTRICT_PROCESS ?= pledge
+else ifeq ($(UNAME_SYS), FreeBSD)
+    CFLAGS ?= -DHAVE_STRTONUM
+    RESTRICT_PROCESS ?= capsicum
+endif
+
+RESTRICT_PROCESS ?= rlimit
+TOTP_CFLAGS ?= -g -Wall -fwrapv -pedantic
+
+CFLAGS += $(TOTP_CFLAGS) \
+					-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
+          -Wformat -Werror=format-security \
+          -pie -fPIE \
+          -fno-strict-aliasing \
+					-DRESTRICT_PROCESS=\"$(RESTRICT_PROCESS)\" \
+					-DRESTRICT_PROCESS_$(RESTRICT_PROCESS)
+
+LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack -I. $(TOTP_LDFLAGS)
+
+all: $(PROG)
+
+$(PROG):
+	$(CC) $(CFLAGS) -o $(PROG) $(SRCS) $(LDFLAGS)
 
 clean:
-	-@rm totp
+	-@rm $(PROG)
 
 test:
 	@PATH=.:$(PATH) bats test
