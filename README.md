@@ -18,10 +18,22 @@ Building
     make
 
     # use the seccomp sandbox
-    SANDBOX=seccomp make clean all
+    RESTRICT_PROCESS=seccomp make clean all
 
     # disable the sandbox
-    SANDBOX=null make clean all
+    RESTRICT_PROCESS=null make clean all
+
+    #### using musl
+    RESTRICT_PROCESS=rlimit ./musl-make
+
+    ## linux seccomp sandbox: requires kernel headers
+
+    # clone the kernel headers somewhere
+    cd /path/to/dir
+    git clone https://github.com/sabotage-linux/kernel-headers.git
+
+    # then compile
+    TOTP_INCLUDE=/path/to/dir ./musl-make clean all
 
 Usage
 -----
