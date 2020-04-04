@@ -52,7 +52,7 @@ Usage
     totp YW2N4W7UBAIAEVCT 30 30
 
     # read key from stdin
-    totp - 30
+    echo YW2N4W7UBAIAEVCT | totp - 30
 
 Why?
 ----
