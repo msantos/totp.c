@@ -1,6 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
- *  Copyright (c) 2019, Michael Santos <michael.santos@gmail.com>
+ *  Copyright (c) 2019-2020, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
@@ -34,7 +34,6 @@
 /*
  *  Keys are entered in base32 encodings
  *
- *  Compile with:  gcc -Wall -o totp totp.c -lcrypto
  */
 
 #include <errno.h>

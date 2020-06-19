@@ -2,7 +2,7 @@
 
 PROG=   totp
 SRCS=   totp.c \
-        hmac/hmac_sha1.c \
+				hmac/hmac_sha1.c \
 				sha/sha1.c
 
 UNAME_SYS := $(shell uname -s)
@@ -21,9 +21,8 @@ TOTP_CFLAGS ?= -g -Wall -fwrapv -pedantic -pie -fPIE
 
 CFLAGS += $(TOTP_CFLAGS) \
 					-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
-          -Wformat -Werror=format-security \
-          -fno-strict-aliasing \
-					-DRESTRICT_PROCESS=\"$(RESTRICT_PROCESS)\" \
+					-Wformat -Werror=format-security \
+					-fno-strict-aliasing \
 					-DRESTRICT_PROCESS_$(RESTRICT_PROCESS)
 
 LDFLAGS ?= -Wl,-z,relro,-z,now -Wl,-z,noexecstack -I. $(TOTP_LDFLAGS)
