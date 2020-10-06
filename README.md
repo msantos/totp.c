@@ -6,7 +6,7 @@ totp.c is a small, simple, standalone command line TOTP
 dependencies.
 
 `totp.c` was written by
-[David M. Syzdek <david@syzdek.net>](https://gist.github.com/syzdek/eba233ca33e1b5a45a99).
+[David M. Syzdek](https://gist.github.com/syzdek/eba233ca33e1b5a45a99).
 
 The standalone `hmac_sha1` implementation is by
 [Bob Liu](https://github.com/Akagi201/hmac-sha1).
@@ -33,7 +33,7 @@ Building
     git clone https://github.com/sabotage-linux/kernel-headers.git
 
     # then compile
-    TOTP_INCLUDE=/path/to/dir ./musl-make clean all
+    MUSL_INCLUDE=/path/to/dir ./musl-make clean all
 
 Usage
 -----

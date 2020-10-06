@@ -9,8 +9,8 @@ case "${MACHTYPE}" in
   *) ;;
 esac
 
-export TOTP_INCLUDE="${TOTP_INCLUDE-/usr/local/lib}"
-export TOTP_LDFLAGS="-I$TOTP_INCLUDE/kernel-headers/generic/include -I$TOTP_INCLUDE/kernel-headers/${MACHTYPE}/include"
+export MUSL_INCLUDE="${MUSL_INCLUDE-/usr/local/lib}"
+export TOTP_LDFLAGS="-I$MUSL_INCLUDE/kernel-headers/generic/include -I$MUSL_INCLUDE/kernel-headers/${MACHTYPE}/include"
 export TOTP_CFLAGS="-g -Wall -fwrapv -pedantic"
 export LDFLAGS="-I. ${TOTP_LDFLAGS}"
 export CC="musl-gcc -static -Os"
