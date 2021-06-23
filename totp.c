@@ -1,6 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
- *  Copyright (c) 2019-2020, Michael Santos <michael.santos@gmail.com>
+ *  Copyright (c) 2019-2021, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
@@ -319,6 +319,12 @@ static int restrict_process() {
   if (setrlimit(RLIMIT_NPROC, &rl) < 0)
     return -1;
 
+  if (setrlimit(RLIMIT_NOFILE, &rl) < 0)
+    return -1;
+
+  if (cap_enter() < 0)
+    return -1;
+
   (void)cap_rights_init(&policy_read, CAP_READ);
   (void)cap_rights_init(&policy_write, CAP_WRITE);
 
@@ -331,7 +337,7 @@ static int restrict_process() {
   if (cap_rights_limit(STDERR_FILENO, &policy_write) < 0)
     return -1;
 
-  return cap_enter();
+  return 0;
 }
 #elif defined(RESTRICT_PROCESS_pledge)
 static int restrict_process() { return pledge("stdio", NULL); }
