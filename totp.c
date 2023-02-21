@@ -1,6 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
- *  Copyright (c) 2019-2021, Michael Santos <michael.santos@gmail.com>
+ *  Copyright (c) 2019-2023, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
 
   if (restrict_process() < 0) {
     fprintf(stderr, "error: restrict_process: %s\n", strerror(errno));
-    SYS_EXIT(111);
+    SYS_EXIT(1);
   }
 
   switch (argc) {
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
   case 2:
     k = (uint8_t *)argv[1];
     if (k == NULL)
-      SYS_EXIT(111);
+      SYS_EXIT(2);
     if (k[0] == '-') {
       if (read(STDIN_FILENO, keybuf, sizeof(keybuf) - 1) <= 0) {
         SYS_EXIT(128 + errno);
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
             "Usage: %s <b32_key> [ <interval> [ <start> ] ]\n(using %s "
             "process restriction)\n",
             argv[0], RESTRICT_PROCESS);
-    SYS_EXIT(1);
+    SYS_EXIT(2);
     break;
   };
 
@@ -172,21 +172,21 @@ int main(int argc, char *argv[]) {
   /* validates base32 key */
   if (((len & 0xF) != 0) && ((len & 0xF) != 8)) {
     fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-    SYS_EXIT(1);
+    SYS_EXIT(2);
   };
   for (pos = 0; (pos < len); pos++) {
     if (base32_vals[k[pos]] == -1) {
       fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-      SYS_EXIT(1);
+      SYS_EXIT(2);
     };
     if (k[pos] == '=') {
       if (((pos & 0xF) == 0) || ((pos & 0xF) == 8)) {
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        SYS_EXIT(1);
+        SYS_EXIT(2);
       }
       if ((len - pos) > 6) {
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        SYS_EXIT(1);
+        SYS_EXIT(2);
       };
       switch (pos % 8) {
       case 2:
@@ -197,12 +197,12 @@ int main(int argc, char *argv[]) {
 
       default:
         fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-        SYS_EXIT(1);
+        SYS_EXIT(2);
       };
       for (; (pos < len); pos++) {
         if (k[pos] != '=') {
           fprintf(stderr, "%s: invalid base32 secret\n", argv[0]);
-          SYS_EXIT(1);
+          SYS_EXIT(2);
         };
       };
     };
