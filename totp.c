@@ -41,6 +41,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -292,14 +294,20 @@ int main(int argc, char *argv[]) {
 #if defined(RESTRICT_PROCESS_rlimit)
 static int restrict_process() {
   struct rlimit rl_zero = {0};
+  struct stat sb = {0};
 
   if (setrlimit(RLIMIT_NPROC, &rl_zero) < 0)
     return -1;
 
-  if (setrlimit(RLIMIT_NOFILE, &rl_zero) < 0)
+  if (fstat(STDOUT_FILENO, &sb) < 0)
     return -1;
 
-  return setrlimit(RLIMIT_FSIZE, &rl_zero);
+  if (!S_ISREG(sb.st_mode)) {
+    if (setrlimit(RLIMIT_FSIZE, &rl_zero) < 0)
+      return -1;
+  }
+
+  return setrlimit(RLIMIT_NOFILE, &rl_zero);
 }
 #elif defined(RESTRICT_PROCESS_seccomp)
 static int restrict_process() {
@@ -313,6 +321,7 @@ static noreturn void sys_exit(int status) {
 #elif defined(RESTRICT_PROCESS_capsicum)
 static int restrict_process() {
   struct rlimit rl = {0};
+  struct stat sb = {0};
   cap_rights_t policy_read;
   cap_rights_t policy_write;
 
@@ -321,6 +330,14 @@ static int restrict_process() {
 
   if (setrlimit(RLIMIT_NOFILE, &rl) < 0)
     return -1;
+
+  if (fstat(STDOUT_FILENO, &sb) < 0)
+    return -1;
+
+  if (!S_ISREG(sb.st_mode)) {
+    if (setrlimit(RLIMIT_FSIZE, &rl_zero) < 0)
+      return -1;
+  }
 
   if (cap_enter() < 0)
     return -1;
