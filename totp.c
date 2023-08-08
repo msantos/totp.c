@@ -325,6 +325,8 @@ static int restrict_process() {
   cap_rights_t policy_read;
   cap_rights_t policy_write;
 
+  closefrom(STDERR_FILENO + 1);
+
   if (setrlimit(RLIMIT_NPROC, &rl) < 0)
     return -1;
 
@@ -335,7 +337,7 @@ static int restrict_process() {
     return -1;
 
   if (!S_ISREG(sb.st_mode)) {
-    if (setrlimit(RLIMIT_FSIZE, &rl_zero) < 0)
+    if (setrlimit(RLIMIT_FSIZE, &rl) < 0)
       return -1;
   }
 
