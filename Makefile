@@ -17,7 +17,7 @@ else ifeq ($(UNAME_SYS), FreeBSD)
 endif
 
 RESTRICT_PROCESS ?= rlimit
-TOTP_CFLAGS ?= -g -Wall -fwrapv -pedantic -pie -fPIE
+TOTP_CFLAGS ?= -g -Wall -Wextra -fwrapv -pedantic -pie -fPIE
 
 CFLAGS += $(TOTP_CFLAGS) \
 					-D_FORTIFY_SOURCE=2 -O2 -fstack-protector-strong \
