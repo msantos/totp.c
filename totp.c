@@ -1,6 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
- *  Copyright (c) 2019-2023, Michael Santos <michael.santos@gmail.com>
+ *  Copyright (c) 2019-2025, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
 }
 
 #if defined(RESTRICT_PROCESS_rlimit)
-static int restrict_process() {
+static int restrict_process(void) {
   struct rlimit rl_zero = {0};
   struct stat sb = {0};
 
@@ -310,7 +310,7 @@ static int restrict_process() {
   return setrlimit(RLIMIT_NOFILE, &rl_zero);
 }
 #elif defined(RESTRICT_PROCESS_seccomp)
-static int restrict_process() {
+static int restrict_process(void) {
   return prctl(PR_SET_SECCOMP, SECCOMP_MODE_STRICT);
 }
 
@@ -319,7 +319,7 @@ static noreturn void sys_exit(int status) {
     syscall(__NR_exit, status);
 }
 #elif defined(RESTRICT_PROCESS_capsicum)
-static int restrict_process() {
+static int restrict_process(void) {
   struct rlimit rl = {0};
   struct stat sb = {0};
   cap_rights_t policy_read;
@@ -359,7 +359,7 @@ static int restrict_process() {
   return 0;
 }
 #elif defined(RESTRICT_PROCESS_pledge)
-static int restrict_process() { return pledge("stdio", NULL); }
+static int restrict_process(void) { return pledge("stdio", NULL); }
 #elif defined(RESTRICT_PROCESS_null)
-static int restrict_process() { return 0; }
+static int restrict_process(void) { return 0; }
 #endif
