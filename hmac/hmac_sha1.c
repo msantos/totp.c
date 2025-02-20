@@ -85,7 +85,7 @@ void hmac_sha1(const uint8_t *k,  /* secret key */
 
     SHA1_Init(&octx);
 
-    /* Pad the key for outter digest */
+    /* Pad the key for outer digest */
 
     for (i = 0; i < lk; ++i) {
         buf[i] = k[i] ^ 0x5c;
