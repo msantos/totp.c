@@ -13,26 +13,23 @@ The standalone `hmac_sha1` implementation is by
 ## Building
 
 ```
-# use the default rlimit sandbox
+# use the default rlimit process restrictions
 make
 
-# use the seccomp sandbox
+# use the seccomp process restrictions
 RESTRICT_PROCESS=seccomp make clean all
 
-# disable the sandbox
+# disable the process restrictions
 RESTRICT_PROCESS=null make clean all
 
 #### using musl
+## sudo apt install musl-dev musl-tools
 RESTRICT_PROCESS=rlimit ./musl-make
 
-## linux seccomp sandbox: requires kernel headers
-
-# clone the kernel headers somewhere
-cd /path/to/dir
-git clone https://github.com/sabotage-linux/kernel-headers.git
-
-# then compile
-MUSL_INCLUDE=/path/to/dir ./musl-make clean all
+## linux seccomp process restrictions: requires kernel headers
+export MUSL_INCLUDE=/tmp
+git clone https://github.com/sabotage-linux/kernel-headers.git $MUSL_INCLUDE/kernel-headers
+./musl-make clean all
 ```
 
 ## Usage
