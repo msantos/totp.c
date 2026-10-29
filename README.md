@@ -12,7 +12,7 @@ The standalone `hmac_sha1` implementation is by
 
 ## Building
 
-```
+```bash
 # use the default rlimit process restrictions
 make
 
@@ -34,7 +34,7 @@ git clone https://github.com/sabotage-linux/kernel-headers.git $MUSL_INCLUDE/ker
 
 ## Usage
 
-```
+```bash
 Usage: totp <b32_key> [ <interval> [ <offset> ] ]
 
 totp YW2N4W7UBAIAEVCT
