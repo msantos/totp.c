@@ -19,6 +19,9 @@ make
 # use the seccomp process restrictions
 RESTRICT_PROCESS=seccomp make clean all
 
+# use the landlock process restrictions
+RESTRICT_PROCESS=landlock make clean all
+
 # disable the process restrictions
 RESTRICT_PROCESS=null make clean all
 

@@ -61,6 +61,54 @@
 #define RESTRICT_PROCESS "seccomp"
 static noreturn void sys_exit(int status);
 #define SYS_EXIT(_status) sys_exit(_status)
+#elif defined(RESTRICT_PROCESS_landlock)
+#if defined(__has_include)
+#if __has_include(<linux/landlock.h>)
+#include <linux/landlock.h>
+#endif
+#endif
+#include <sys/prctl.h>
+#include <syscall.h>
+#define RESTRICT_PROCESS "landlock"
+#define SYS_EXIT(_status) return (_status)
+
+#ifndef LANDLOCK_CREATE_RULESET_VERSION
+#define LANDLOCK_CREATE_RULESET_VERSION (1U << 0)
+struct landlock_ruleset_attr {
+  uint64_t handled_access_fs;
+  uint64_t handled_access_net;
+};
+#endif
+
+#ifndef LANDLOCK_ACCESS_FS_REFER
+#define LANDLOCK_ACCESS_FS_REFER (1ULL << 13)
+#endif
+#ifndef LANDLOCK_ACCESS_FS_TRUNCATE
+#define LANDLOCK_ACCESS_FS_TRUNCATE (1ULL << 14)
+#endif
+#ifndef LANDLOCK_ACCESS_FS_IOCTL_DEV
+#define LANDLOCK_ACCESS_FS_IOCTL_DEV (1ULL << 15)
+#endif
+
+#ifndef PR_SET_NO_NEW_PRIVS
+#define PR_SET_NO_NEW_PRIVS 38
+#endif
+
+#ifndef SYS_landlock_create_ruleset
+#ifdef __NR_landlock_create_ruleset
+#define SYS_landlock_create_ruleset __NR_landlock_create_ruleset
+#else
+#define SYS_landlock_create_ruleset 444
+#endif
+#endif
+
+#ifndef SYS_landlock_restrict_self
+#ifdef __NR_landlock_restrict_self
+#define SYS_landlock_restrict_self __NR_landlock_restrict_self
+#else
+#define SYS_landlock_restrict_self 446
+#endif
+#endif
 #elif defined(RESTRICT_PROCESS_capsicum)
 #include <sys/capsicum.h>
 #include <sys/param.h>
@@ -317,6 +365,44 @@ static int restrict_process(void) {
 static noreturn void sys_exit(int status) {
   for (;;)
     syscall(__NR_exit, status);
+}
+#elif defined(RESTRICT_PROCESS_landlock)
+static int restrict_process(void) {
+  struct landlock_ruleset_attr attr = {0};
+  uint64_t mask;
+  int abi;
+  int fd;
+
+  abi = syscall(SYS_landlock_create_ruleset, NULL, 0,
+                LANDLOCK_CREATE_RULESET_VERSION);
+  if (abi < 0)
+    return -1;
+
+  mask = (1ULL << 13) - 1; /* ABI 1 */
+  if (abi >= 2)
+    mask |= LANDLOCK_ACCESS_FS_REFER;
+  if (abi >= 3)
+    mask |= LANDLOCK_ACCESS_FS_TRUNCATE;
+  if (abi >= 5)
+    mask |= LANDLOCK_ACCESS_FS_IOCTL_DEV;
+
+  attr.handled_access_fs = mask;
+
+  fd = syscall(SYS_landlock_create_ruleset, &attr, sizeof(attr), 0);
+  if (fd < 0)
+    return -1;
+
+  if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
+    (void)close(fd);
+    return -1;
+  }
+
+  if (syscall(SYS_landlock_restrict_self, fd, 0) < 0) {
+    (void)close(fd);
+    return -1;
+  }
+
+  return close(fd);
 }
 #elif defined(RESTRICT_PROCESS_capsicum)
 static int restrict_process(void) {
