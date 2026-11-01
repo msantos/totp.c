@@ -1,6 +1,6 @@
 /*
  *  TOTP: Time-Based One-Time Password Algorithm
- *  Copyright (c) 2019-2025, Michael Santos <michael.santos@gmail.com>
+ *  Copyright (c) 2019-2026, Michael Santos <michael.santos@gmail.com>
  *  Copyright (c) 2015, David M. Syzdek <david@syzdek.net>
  *  All rights reserved.
  *
